@@ -330,6 +330,7 @@ class CVAE(keras.Model):
                 eos_id=self.EOS,
                 stop_early=True)
         
+        
         return ids[:,0,:]  
 
 
