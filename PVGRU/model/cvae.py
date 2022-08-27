@@ -173,6 +173,7 @@ class CVAE(keras.Model):
         self.SOS = SOS
         self.EOS = EOS
         self.PAD = PAD
+        self.kl_mult = 0.0
     def getEmbeddingTable(self):
         if self.config.fp16:
             return tf.cast(self.embedding.embeddings,dtype=tf.float16)
@@ -279,6 +280,8 @@ class CVAE(keras.Model):
             b_loss = self.bow_loss(tgt[:, 1:], bow_logits)
             b_loss = b_loss / tf.reduce_sum(tf.cast(tf.not_equal(tgt[:,1:],self.PAD),dtype=loss.dtype))
         kl_div = tf.reduce_mean(kl_div)
+        loss += self.kl_mult * kl_div
+        self.kl_mult = min(self.kl_mult + 1.0 / self.config.kl_annealing_iter, 1.0)
         return outputs,[loss,b_loss+kl_div]
     def BeamDecoder(self,features,training=False):
         src = features["src"]
